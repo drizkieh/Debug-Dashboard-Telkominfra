@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statement of Account – Mastersystem</title>
+<style>
+  :root {
+    --bg: #0d0d0d; --card: #1c1c1c; --border: #2a2a2a;
+    --blue: #2f6fe6; --blue-dark: #1e4faa; --text: #f0f0f0; --muted: #8a8a8a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #1c2128; color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  .header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 18px 28px; border-bottom: 1px solid #2a303a;
+  }
+  .btn-back-portal {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-decoration: none; padding: 6px 10px; border: 1px solid #333a45;
+    border-radius: 6px; white-space: nowrap;
+  }
+  .btn-back-portal:hover { color: var(--blue); border-color: var(--blue); }
+  .header h1 { font-size: 14px; font-weight: 700; margin: 0; letter-spacing: 0.3px; }
+  .header p { font-size: 11px; color: var(--muted); margin: 2px 0 0; }
+  .empty-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 40px 20px;
+  }
+  .empty-card {
+    text-align: center; max-width: 420px;
+  }
+  .empty-icon {
+    width: 64px; height: 64px; margin: 0 auto 20px;
+    border-radius: 16px; background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+    display: flex; align-items: center; justify-content: center;
+  }
+  .empty-card h2 { font-size: 18px; margin: 0 0 10px; }
+  .empty-card p { font-size: 13px; color: #a9afb8; line-height: 1.6; margin: 0 0 24px; }
+  .empty-tag {
+    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
+    padding: 5px 12px; border-radius: 6px; color: #fff;
+    background: linear-gradient(135deg, var(--blue), var(--blue-dark)); margin-bottom: 18px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../../index.html" class="btn-back-portal">← Portal</a>
+  <div>
+    <h1>STATEMENT OF ACCOUNT</h1>
+    <p>Mastersystem – ICT Solutions</p>
+  </div>
+</div>
+
+<div class="empty-wrap">
+  <div class="empty-card">
+    <div class="empty-icon">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M6 3h9l5 5v13H6z"/><path d="M15 3v5h5"/><path d="M9 13h6M9 17h6M9 9h2"/></svg>
+    </div>
+    <div class="empty-tag">SEGERA HADIR</div>
+    <h2>Dashboard belum tersedia</h2>
+    <p>Data Statement of Account (Invoice, AR, Payment, Outstanding, Aging Receivable) untuk Mastersystem akan ditampilkan di sini setelah sheet dan datanya di-upload.</p>
+  </div>
+</div>
+
+</body>
+</html>
