@@ -422,6 +422,23 @@ th { color: var(--blue); background: rgba(47,111,230,0.06); border-bottom-color:
 .acct-val { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
 .acct-val.hl { color: var(--blue); }
 
+.charts-row-4 { grid-template-columns: 1fr 1fr 1.1fr; }
+
 @media (max-width: 1024px) {
   .acct-summary { grid-template-columns: 1fr; }
+  .charts-row-4 { grid-template-columns: 1fr 1fr; }
+  .charts-row-4 .chart-card:nth-child(3) { grid-column: 1 / -1; }
+}
+
+@media (max-width: 768px) {
+  .charts-row-4 { grid-template-columns: 1fr; }
+  .header-title h1 { font-size: 12.5px; }
+  .header-customer { font-size: 9.5px; }
+  .nav-title { font-size: 10px; }
+  .nav-item { font-size: 11px; padding: 7px 8px; }
+  .nav-sub .nav-item { font-size: 10.5px; }
+  .acct-row { padding: 5px 0; }
+  .acct-label, .acct-val { font-size: 11px; }
+  #topOutstandingTable th, #topOutstandingTable td { white-space: nowrap; }
+  #detailTable td[style*="max-width"] { max-width: 200px !important; }
 }
