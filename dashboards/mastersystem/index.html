@@ -4,71 +4,201 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Statement of Account – Mastersystem</title>
-<style>
-  :root {
-    --bg: #0d0d0d; --card: #1c1c1c; --border: #2a2a2a;
-    --blue: #2f6fe6; --blue-dark: #1e4faa; --text: #f0f0f0; --muted: #8a8a8a;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: #1c2128; color: var(--text);
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    min-height: 100vh; display: flex; flex-direction: column;
-  }
-  .header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 18px 28px; border-bottom: 1px solid #2a303a;
-  }
-  .btn-back-portal {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 11px; font-weight: 600; color: var(--muted);
-    text-decoration: none; padding: 6px 10px; border: 1px solid #333a45;
-    border-radius: 6px; white-space: nowrap;
-  }
-  .btn-back-portal:hover { color: var(--blue); border-color: var(--blue); }
-  .header h1 { font-size: 14px; font-weight: 700; margin: 0; letter-spacing: 0.3px; }
-  .header p { font-size: 11px; color: var(--muted); margin: 2px 0 0; }
-  .empty-wrap {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 40px 20px;
-  }
-  .empty-card {
-    text-align: center; max-width: 420px;
-  }
-  .empty-icon {
-    width: 64px; height: 64px; margin: 0 auto 20px;
-    border-radius: 16px; background: linear-gradient(135deg, var(--blue), var(--blue-dark));
-    display: flex; align-items: center; justify-content: center;
-  }
-  .empty-card h2 { font-size: 18px; margin: 0 0 10px; }
-  .empty-card p { font-size: 13px; color: #a9afb8; line-height: 1.6; margin: 0 0 24px; }
-  .empty-tag {
-    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
-    padding: 5px 12px; border-radius: 6px; color: #fff;
-    background: linear-gradient(135deg, var(--blue), var(--blue-dark)); margin-bottom: 18px;
-  }
-</style>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </head>
 <body>
 
+<!-- HEADER -->
 <div class="header">
-  <a href="../../index.html" class="btn-back-portal">← Portal</a>
-  <div>
-    <h1>STATEMENT OF ACCOUNT</h1>
-    <p>Mastersystem – ICT Solutions</p>
-  </div>
-</div>
-
-<div class="empty-wrap">
-  <div class="empty-card">
-    <div class="empty-icon">
-      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2"><path d="M4 4h16v16H4z" opacity="0"/><path d="M6 3h9l5 5v13H6z"/><path d="M15 3v5h5"/><path d="M9 13h6M9 17h6M9 9h2"/></svg>
+  <div class="header-left">
+    <a href="../../index.html" class="btn-back-portal" title="Kembali ke Portal">← Portal</a>
+    <div class="logo">◈</div>
+    <div class="header-title">
+      <h1>STATEMENT OF ACCOUNT DASHBOARD</h1>
+      <div class="header-customer">Customer : <b id="customerName">PT MASTERSYSTEM INFOTAMA TBK</b></div>
     </div>
-    <div class="empty-tag">SEGERA HADIR</div>
-    <h2>Dashboard belum tersedia</h2>
-    <p>Data Statement of Account (Invoice, AR, Payment, Outstanding, Aging Receivable) untuk Mastersystem akan ditampilkan di sini setelah sheet dan datanya di-upload.</p>
+  </div>
+  <div class="header-right">
+    <div class="label">Data Update :</div>
+    <div class="date" id="dataUpdateDate">–</div>
+    <div style="margin-top:4px;display:flex;align-items:center;gap:6px;justify-content:flex-end">
+      <div class="source-indicator" id="sourceIndicator">Sumber: <span>Data Bawaan</span></div>
+      <button class="btn-primary" style="font-size:10px;padding:4px 10px" onclick="openConfig()">⚙ Ganti Sheet</button>
+    </div>
   </div>
 </div>
 
+<!-- DRAWER OVERLAY -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeFilterDrawer()"></div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <button class="drawer-close-btn" onclick="closeFilterDrawer()">✕</button>
+
+    <div class="nav-title">NAVIGASI</div>
+    <div class="nav-list">
+      <a class="nav-item" href="../../index.html"><span class="nav-icon">🏠</span>Dashboard</a>
+      <div class="nav-item disabled"><span class="nav-icon">📄</span>Invoice Management</div>
+      <a class="nav-item" href="../telkominfra/index.html"><span class="nav-icon">📊</span>Project Monitoring</a>
+
+      <div class="nav-item expanded" onclick="this.classList.toggle('expanded'); document.getElementById('navSoaSub').classList.toggle('open')">
+        <span class="nav-icon">📁</span>Statement of Account<span class="nav-arrow">▶</span>
+      </div>
+      <div class="nav-sub open" id="navSoaSub">
+        <div class="nav-item disabled">Telkominfra</div>
+        <div class="nav-item active">Mastersystem</div>
+        <div class="nav-item disabled">Telkomsigma</div>
+        <div class="nav-item disabled">PLN</div>
+        <div class="nav-item disabled">BRI</div>
+        <div class="nav-item disabled">Customer Lainnya</div>
+      </div>
+
+      <div class="nav-item disabled"><span class="nav-icon">💳</span>Payment Monitoring</div>
+      <div class="nav-item disabled"><span class="nav-icon">📦</span>PO Monitoring</div>
+      <div class="nav-item disabled"><span class="nav-icon">📈</span>Report &amp; Analytics</div>
+      <div class="nav-item disabled"><span class="nav-icon">🗂</span>Master Data</div>
+      <div class="nav-item disabled"><span class="nav-icon">👤</span>User Management</div>
+    </div>
+
+    <div class="filter-title" style="margin-top:6px">🔍 FILTER CEPAT</div>
+
+    <div class="filter-group">
+      <label>Customer</label>
+      <select id="fCustomer"><option value="">Semua</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Periode</label>
+      <select id="fPeriode"><option value="">Semua</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Tipe Pekerjaan</label>
+      <select id="fTipe"><option value="">Semua</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Status</label>
+      <select id="fStatus">
+        <option value="">Semua</option>
+        <option value="CLOSED">Closed</option>
+        <option value="OPEN">Open</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Status Bayar</label>
+      <select id="fBayar">
+        <option value="">Semua</option>
+        <option value="FULLY PAID">Fully Paid</option>
+        <option value="PARTIAL PAID">Partial Paid</option>
+        <option value="UNPAID">Unpaid</option>
+      </select>
+    </div>
+
+    <button class="btn-refresh" onclick="resetFilters()">↺ Reset Filter</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- KPI ROW -->
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <!-- CHART ROW 1: 2 donuts -->
+    <div class="charts-row charts-row-1">
+      <div class="chart-card">
+        <div class="chart-title">Invoice Status</div>
+        <div class="donut-area">
+          <div class="donut-wrap">
+            <canvas id="chartDonutStatus"></canvas>
+            <div class="donut-center"><div class="big" id="donutStatusCenter">–</div><div class="sm">TOTAL</div></div>
+          </div>
+          <div class="donut-legend" id="legendStatus"></div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Payment Status</div>
+        <div class="donut-area">
+          <div class="donut-wrap">
+            <canvas id="chartDonutBayar"></canvas>
+            <div class="donut-center"><div class="big" id="donutBayarCenter">–</div><div class="sm">TOTAL</div></div>
+          </div>
+          <div class="donut-legend" id="legendBayar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART ROW 2: line + bar -->
+    <div class="charts-row charts-row-1">
+      <div class="chart-card">
+        <div class="chart-title">Invoice vs Collection (IDR)</div>
+        <div class="chart-wrap" style="height:230px"><canvas id="chartLine"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Payment by Month (IDR)</div>
+        <div class="chart-wrap" style="height:230px"><canvas id="chartBar"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ROW 3: aging + account summary + top outstanding -->
+    <div class="charts-row" style="grid-template-columns: 1fr 1fr 1.1fr">
+      <div class="chart-card">
+        <div class="chart-title">Aging Receivable (Outstanding AR)</div>
+        <div id="agingTable"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Account Summary</div>
+        <div class="acct-summary" id="acctSummary"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top Outstanding Invoice</div>
+        <div class="table-wrap"><table id="topOutstandingTable"></table></div>
+      </div>
+    </div>
+
+    <!-- DETAIL TABLE -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="chart-title" style="margin:0">Detail Invoice</div>
+        <div class="mobile-only" style="font-size:10px;color:var(--muted)" id="detailCount"></div>
+      </div>
+      <div class="table-wrap">
+        <table id="detailTable"></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<div class="bottom-nav">
+  <button class="bottom-nav-btn" onclick="openFilterDrawer()"><span class="bn-icon">🔍</span>Filter</button>
+  <button class="bottom-nav-btn primary" onclick="window.scrollTo({top:0,behavior:'smooth'})"><span class="bn-icon">⌂</span>Atas</button>
+  <a class="bottom-nav-btn" href="../../index.html"><span class="bn-icon">↩</span>Portal</a>
+</div>
+
+<!-- CONFIG MODAL -->
+<div class="modal-overlay" id="configModal" style="display:none">
+  <div class="modal">
+    <h3 style="margin-bottom:12px;font-size:15px">⚙ Sumber Data</h3>
+    <div class="config-hint">Data saat ini memakai <code>Data Bawaan</code> (hasil upload terakhir). Untuk memakai Google Sheet, isi Sheet ID &amp; nama tab di bawah — sheet harus dibagikan "Anyone with link – Viewer".</div>
+    <div class="filter-group" style="margin-bottom:10px">
+      <label>Google Sheet ID</label>
+      <input type="text" id="cfgSheetId" placeholder="cth: 1a8MB2MZ..." style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:12px">
+    </div>
+    <div class="filter-group" style="margin-bottom:10px">
+      <label>Nama Tab</label>
+      <input type="text" id="cfgSheetName" placeholder="cth: Mastersystem" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:12px">
+    </div>
+    <div class="error-msg" id="cfgError"></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn-primary" onclick="applySheetConfig()">Simpan &amp; Muat</button>
+      <button class="btn-refresh" style="background:var(--bg3);width:auto;padding:8px 16px" onclick="closeConfig()">Batal</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
