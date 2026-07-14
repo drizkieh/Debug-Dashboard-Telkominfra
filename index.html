@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Invoice Management – Integra Solusi Mandiri</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Menghubungkan ke Google Sheets…</div>
+</div>
+
+<!-- CONFIG MODAL -->
+<div class="modal-overlay" id="configModal" style="display:none">
+  <div class="modal" style="max-height:90vh;overflow-y:auto">
+    <h3>⚙️ Sumber Data</h3>
+
+    <div class="source-tabs">
+      <button class="source-tab active" id="tabDefault" onclick="switchTab('default')">📊 Sheet Default</button>
+      <button class="source-tab" id="tabCustom" onclick="switchTab('custom')">🔗 Sheet Lain</button>
+      <button class="source-tab" id="tabDemo" onclick="switchTab('demo')">🎲 Data Demo</button>
+    </div>
+
+    <!-- PANEL: DEFAULT -->
+    <div class="source-panel active" id="panelDefault">
+      <div class="default-sheet-card">
+        <div class="ds-label">SHEET DEFAULT — INTEGRA SOLUSI MANDIRI</div>
+        <div class="ds-name">Invoice Management Sheet</div>
+        <div class="ds-id">1a8MB2MZlViXyoCA45QuOw2ahiipGBmUH0CbzF5CgY0Q</div>
+        <div class="connected-badge">✓ Siap digunakan</div>
+      </div>
+      <div class="config-hint" style="margin-top:8px">
+        Untuk fitur detail invoice: tambahkan kolom <strong>Link PDF</strong> di sheet utama. Tab PO Master butuh kolom: <strong>No PO, Nilai PO, Nama Pekerjaan, Link PDF PO</strong>.
+      </div>
+      <label class="modal-label">Nama Tab Sheet</label>
+      <input type="text" id="defaultSheetName" placeholder="Sheet1" value="Sheet1">
+      <label class="modal-label">Nama Tab Detail Item</label>
+      <input type="text" id="defaultDetailSheetName" placeholder="Detail" value="Detail">
+      <label class="modal-label">Nama Tab PO Master</label>
+      <input type="text" id="defaultPOMasterSheetName" placeholder="PO Master" value="PO Master">
+
+      <!-- Password config -->
+      <div class="pwd-config-block">
+        <div class="pcb-label">🔐 Password Dokumen PO</div>
+        <div class="pcb-hint">PIN diatur lewat tab <strong>"Password"</strong> di Google Sheets (kolom pertama, baris pertama = nilai PIN), bukan dari sini. Kalau tab kosong/tidak ada, PDF langsung terbuka tanpa proteksi.</div>
+      </div>
+
+      <div class="error-msg" id="defaultError"></div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="hideConfig()">Batal</button>
+        <button class="btn-primary" onclick="connectDefault()">Gunakan Sheet Default</button>
+      </div>
+    </div>
+
+    <!-- PANEL: CUSTOM -->
+    <div class="source-panel" id="panelCustom">
+      <div class="config-hint">
+        Ambil Sheet ID dari URL spreadsheet kamu:<br>
+        <code>…/spreadsheets/d/<strong>[SHEET ID]</strong>/edit</code><br>
+        Pastikan sudah di-share: <strong>Anyone with the link → Viewer</strong>
+      </div>
+      <label class="modal-label">Sheet ID</label>
+      <input type="text" id="sheetIdInput" placeholder="Contoh: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
+      <label class="modal-label">Nama Tab Sheet</label>
+      <input type="text" id="sheetNameInput" placeholder="Sheet1" value="Sheet1">
+      <label class="modal-label">Nama Tab Detail Item</label>
+      <input type="text" id="detailSheetNameInput" placeholder="Detail" value="Detail">
+      <label class="modal-label">Nama Tab PO Master</label>
+      <input type="text" id="poMasterSheetNameInput" placeholder="PO Master" value="PO Master">
+
+      <div class="pwd-config-block">
+        <div class="pcb-label">🔐 Password Dokumen PO</div>
+        <div class="pcb-hint">PIN diatur lewat tab <strong>"Password"</strong> di Google Sheets (kolom pertama, baris pertama = nilai PIN), bukan dari sini. Kalau tab kosong/tidak ada, PDF langsung terbuka tanpa proteksi.</div>
+      </div>
+
+      <div class="error-msg" id="configError"></div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="hideConfig()">Batal</button>
+        <button class="btn-primary" onclick="connectCustom()">Hubungkan</button>
+      </div>
+    </div>
+
+    <!-- PANEL: DEMO -->
+    <div class="source-panel" id="panelDemo">
+      <div class="default-sheet-card" style="border-color:var(--border)">
+        <div class="ds-label">DATA DEMO</div>
+        <div class="ds-name">55 invoice dummy — Desember 2025 s/d Juni 2026</div>
+        <div class="ds-id" style="color:var(--muted);margin-top:6px">Tidak memerlukan koneksi internet. Cocok untuk preview tampilan dashboard.</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="hideConfig()">Batal</button>
+        <button class="btn-primary" onclick="useDummyData()">Muat Data Demo</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- INVOICE DETAIL MODAL -->
+<div class="modal-overlay" id="invoiceDetailModal" style="display:none">
+  <div class="modal modal-lg" style="position:relative">
+    <button class="detail-close-btn" onclick="closeInvoiceDetail()" aria-label="Tutup">✕</button>
+    <h3 id="detailModalTitle">📄 Detail Invoice</h3>
+    <div class="detail-info-grid" id="detailInfoGrid"></div>
+    <div class="detail-pdf-row" id="detailPdfRow"></div>
+    <div class="detail-section-title">Detail Item / Site</div>
+    <div class="detail-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>No</th><th>PO Item</th><th>Nama Pekerjaan</th><th>Site ID</th><th>ACT ID</th>
+            <th>Harga Satuan</th><th>Qty</th><th>Unit</th><th>Total Price</th><th>Total Billed</th>
+            <th>Delivery %</th><th>GR Amount</th><th>GR %</th><th>Balance</th>
+          </tr>
+        </thead>
+        <tbody id="detailItemsBody"></tbody>
+        <tfoot id="detailItemsFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PO MILESTONE DETAIL MODAL -->
+<div class="modal-overlay" id="poDetailModal" style="display:none">
+  <div class="modal modal-lg" style="position:relative">
+    <button class="detail-close-btn" onclick="closePOMilestoneDetail()" aria-label="Tutup">✕</button>
+    <h3 id="poDetailModalTitle">📦 Detail Milestone PO</h3>
+    <div class="detail-info-grid" id="poDetailInfoGrid"></div>
+    <div style="margin-bottom:18px">
+      <div class="milestone-bar-wrap" style="height:10px"><div class="milestone-bar" id="poDetailBar" style="width:0%"></div></div>
+    </div>
+
+    <!-- PDF PO document section -->
+    <div id="poPdfSection" style="margin-bottom:18px">
+      <div class="detail-section-title">Dokumen PO</div>
+      <div id="poPdfBtnArea"></div>
+    </div>
+
+    <div class="detail-section-title">Invoice dari PO Ini</div>
+    <div class="detail-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>No Invoice</th><th>ACT ID</th><th>No BAST</th><th>Periode</th><th>Value Invoice</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="poDetailItemsBody"></tbody>
+        <tfoot id="poDetailItemsFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PDF PASSWORD PROMPT -->
+<div class="pdf-pwd-overlay" id="pdfPwdOverlay" style="display:none">
+  <div class="pdf-pwd-box">
+    <div class="lock-icon">🔐</div>
+    <h4>Dokumen Dilindungi</h4>
+    <p id="pdfPwdDesc">Masukkan password untuk mengakses dokumen PO ini.</p>
+    <div class="pwd-input-wrap">
+      <input type="password" id="pdfPwdField" placeholder="Masukkan password…" onkeydown="if(event.key==='Enter')checkPdfPwd()">
+      <button class="pwd-toggle" onclick="togglePwdVisibility()" title="Tampilkan/sembunyikan">👁</button>
+    </div>
+    <div class="pwd-error" id="pdfPwdError"></div>
+    <div class="pwd-actions">
+      <button class="btn-secondary" onclick="closePdfPwd()">Batal</button>
+      <button class="btn-primary" onclick="checkPdfPwd()">Buka Dokumen</button>
+    </div>
+  </div>
+</div>
+
+<!-- PDF VIEWER -->
+<div class="pdf-viewer-overlay" id="pdfViewerOverlay" style="display:none">
+  <div class="pdf-viewer-header">
+    <h4 id="pdfViewerTitle">📄 Dokumen PO</h4>
+    <div class="pdf-viewer-actions">
+      <a id="pdfViewerDownload" href="#" target="_blank" class="btn-pdf" style="font-size:11px;padding:6px 12px">⬇ Download PDF</a>
+      <button class="btn-secondary" onclick="closePdfViewer()" style="font-size:11px">✕ Tutup</button>
+    </div>
+  </div>
+  <div class="pdf-viewer-body" id="pdfViewerBody"></div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo">◈</div>
+    <div class="header-title">
+      <h1>DASHBOARD</h1>
+      <h2>INVOICE MANAGEMENT</h2>
+      <p>TIS (ISM - Telkominfra)</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="label">Data Update :</div>
+    <div class="date" id="data-update-date">–</div>
+    <div style="margin-top:4px;display:flex;align-items:center;gap:6px;justify-content:flex-end">
+      <div class="source-indicator" id="sourceIndicator">Sumber: <span>–</span></div>
+      <button class="btn-primary" style="font-size:10px;padding:4px 10px" onclick="openConfig()">⚙ Ganti Sheet</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER OVERLAY -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeFilterDrawer()"></div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <button class="drawer-close-btn" onclick="closeFilterDrawer()" aria-label="Tutup filter">✕</button>
+    <div class="filter-title">⬡ FILTER</div>
+    <div class="filter-group">
+      <label>Tahun</label>
+      <select id="fTahun" onchange="applyFilters()"><option value="">All</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Periode</label>
+      <select id="fPeriode" onchange="applyFilters()"><option value="">All</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Tipe Pekerjaan</label>
+      <select id="fTipe" onchange="applyFilters()"><option value="">All</option></select>
+    </div>
+    <div class="filter-group">
+      <label>No PO</label>
+      <select id="fPO" onchange="applyFilters()"><option value="">All</option></select>
+    </div>
+    <div class="filter-group">
+      <label>ACT ID</label>
+      <select id="fACT" onchange="applyFilters()"><option value="">All</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Status Bayar</label>
+      <select id="fStatus" onchange="applyFilters()"><option value="">All</option></select>
+    </div>
+    <button class="btn-refresh" onclick="resetFilters()">↺ Reset Filter</button>
+    <div class="summary-box">
+      <div class="s-label">RINGKASAN PERIODE</div>
+      <div class="s-row">Periode Terpilih</div>
+      <div class="s-val2" id="sumPeriode" style="font-size:11px;color:var(--orange)">All Periode</div>
+      <div style="height:8px"></div>
+      <div class="s-row">Total Invoice Value</div>
+      <div class="s-val" id="sumValue">–</div>
+      <div style="height:6px"></div>
+      <div class="s-row">Total Invoice</div>
+      <div class="s-val2" id="sumCount">–</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- KPI -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-icon">📊</div>
+        <div>
+          <div class="kpi-label">Total Invoice Value</div>
+          <div class="kpi-val orange" id="kpiTotalValue">–</div>
+          <div class="kpi-sub" id="kpiTotalValueSub">–</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">📄</div>
+        <div>
+          <div class="kpi-label">Total Invoice</div>
+          <div class="kpi-val" id="kpiTotalInvoice">–</div>
+          <div class="kpi-sub">Invoice Aktif</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">📁</div>
+        <div>
+          <div class="kpi-label">Total PO</div>
+          <div class="kpi-val" id="kpiTotalPO">–</div>
+          <div class="kpi-sub">Purchase Order</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🪪</div>
+        <div>
+          <div class="kpi-label">Total ACT ID</div>
+          <div class="kpi-val" id="kpiTotalACT">–</div>
+          <div class="kpi-sub">Aktivitas</div>
+        </div>
+      </div>
+      <!-- CHANGED: was Average Invoice Value, now Total Nilai PO -->
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(234,179,8,0.15)">📋</div>
+        <div>
+          <div class="kpi-label">Total Nilai PO</div>
+          <div class="kpi-val orange nilai-po" id="kpiTotalNilaiPO">–</div>
+          <div class="kpi-sub" id="kpiNilaiPOSub">– PO terinvoice</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#22c55e,#4ade80)">✅</div>
+        <div>
+          <div class="kpi-label">Total Paid</div>
+          <div class="kpi-val" id="kpiPaidValue" style="color:#4ade80">–</div>
+          <div class="kpi-sub" id="kpiPaidSub">–</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:linear-gradient(135deg,#64748b,#94a3b8)">⏳</div>
+        <div>
+          <div class="kpi-label">Total Unpaid</div>
+          <div class="kpi-val" id="kpiUnpaidValue" style="color:#94a3b8">–</div>
+          <div class="kpi-sub" id="kpiUnpaidSub">–</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 1 -->
+    <div class="charts-row charts-row-1">
+      <div class="chart-card">
+        <div class="chart-title">Trend Invoice Value per Periode</div>
+        <div class="chart-wrap" style="height:200px">
+          <canvas id="chartTrend"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Invoice Value by Tipe Pekerjaan</div>
+        <div class="donut-area">
+          <div class="donut-wrap">
+            <canvas id="chartDonut"></canvas>
+            <div class="donut-center">
+              <div class="big" id="donutCenter">–</div>
+              <div class="sm" id="donutCenterUnit">Miliar</div>
+            </div>
+          </div>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2 -->
+    <div class="charts-row charts-row-2">
+      <div class="chart-card">
+        <div class="chart-title">Invoice Value by PO (Top 10)</div>
+        <div class="chart-wrap" id="barPOWrap" style="height:220px">
+          <canvas id="chartBarPO"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Invoice Value per Periode by Tipe Pekerjaan</div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="chartStacked"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Invoice Value per Periode</div>
+        <div class="monthly-list" id="monthlyList"></div>
+      </div>
+    </div>
+
+    <!-- ROW 3 -->
+    <div class="charts-row charts-row-3">
+      <div class="chart-card">
+        <div class="chart-title">Milestone PO</div>
+        <div class="milestone-summary" id="milestoneSummary"></div>
+        <div class="milestone-list" id="milestoneList"></div>
+        <div class="milestone-click-hint">Klik item PO untuk lihat detail & dokumen</div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="chart-title" style="margin-bottom:0">Detail Invoice</div>
+          <div style="font-size:10px;color:var(--orange);cursor:pointer" id="seeAllBtn" onclick="toggleShowAll()">Lihat semua data →</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No Invoice</th><th>ACT ID</th><th>No PO</th><th>No BAST</th>
+                <th>Value Invoice</th><th>Periode</th><th>Tahun</th><th>Bulan Tanggal</th><th>Tipe Pekerjaan</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="bottom-nav-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <span class="bn-icon">📊</span>KPI
+  </button>
+  <button class="bottom-nav-btn" onclick="openFilterDrawer()">
+    <span class="bn-icon">⬡</span>Filter
+  </button>
+  <button class="bottom-nav-btn primary" onclick="openConfig()">
+    <span class="bn-icon">⚙</span>Sheet
+  </button>
+  <button class="bottom-nav-btn" onclick="scrollToTable()">
+    <span class="bn-icon">📋</span>Tabel
+  </button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
