@@ -89,5 +89,27 @@
   © 2026 TRADE INFRASTRUCTURE SECURITY DIVISION. All rights reserved.
 </footer>
 
+<script>
+  // Fallback fade for browsers without native cross-document View Transitions
+  // (Chrome/Edge 126+ handle this natively via the @view-transition rule in portal.css)
+  if (!('onpageswap' in window)) {
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.style.opacity = '0';
+      document.body.style.transition = 'opacity .25s ease';
+      requestAnimationFrame(() => { document.body.style.opacity = '1'; });
+    });
+    document.querySelectorAll('.dash-card').forEach(link => {
+      link.addEventListener('click', (e) => {
+        const href = link.getAttribute('href');
+        if (!href) return;
+        e.preventDefault();
+        document.body.style.transition = 'opacity .22s ease';
+        document.body.style.opacity = '0';
+        setTimeout(() => { window.location.href = href; }, 220);
+      });
+    });
+  }
+</script>
+
 </body>
 </html>

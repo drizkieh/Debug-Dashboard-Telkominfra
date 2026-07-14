@@ -81,7 +81,8 @@ body {
 
 .dash-card {
   position: relative;
-  display: block;
+  display: flex;
+  flex-direction: column;
   background: #262c36;
   border: 1px solid #333a45;
   border-radius: var(--radius);
@@ -97,7 +98,7 @@ body {
   box-shadow: 0 12px 28px rgba(0,0,0,0.35);
 }
 
-.card-art { position: absolute; right: -10px; top: 30px; opacity: 0.9; z-index: 0; }
+.card-art { position: absolute; right: -14px; bottom: -14px; opacity: 0.9; z-index: 0; pointer-events: none; }
 
 .card-tag {
   position: relative; z-index: 1;
@@ -107,7 +108,11 @@ body {
 .tag-red { background: linear-gradient(135deg, var(--red), #c9302a); }
 .tag-blue { background: linear-gradient(135deg, var(--blue), var(--blue-dark)); }
 
-.card-logo { position: relative; z-index: 1; margin-bottom: 16px; display: flex; flex-direction: column; gap: 4px; }
+.card-logo {
+  position: relative; z-index: 1; margin-bottom: 16px;
+  display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  min-height: 62px;
+}
 .tk-telkom { font-size: 26px; font-weight: 800; color: #fff; }
 .tk-infra { color: var(--red); font-weight: 800; }
 .tk-sub { font-size: 10.5px; color: var(--muted); font-weight: 500; }
@@ -135,10 +140,29 @@ body {
   width: 100%; justify-content: center;
   padding: 12px 16px; border-radius: 9px;
   font-size: 13.5px; font-weight: 700; color: #fff;
+  margin-top: auto;
 }
 .cta-red { background: linear-gradient(135deg, var(--red), #c9302a); }
 .cta-blue { background: linear-gradient(135deg, var(--blue), var(--blue-dark)); }
 .card-cta svg:last-child { margin-left: auto; }
+
+/* PAGE TRANSITIONS (native, cross-document) */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: portal-fade-out 0.28s ease both;
+}
+::view-transition-new(root) {
+  animation: portal-fade-in 0.32s ease both;
+}
+@keyframes portal-fade-out {
+  to { opacity: 0; transform: scale(0.98); }
+}
+@keyframes portal-fade-in {
+  from { opacity: 0; transform: scale(1.02); }
+}
 
 /* FOOTER */
 .portal-footer {
